@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+         tools {
+          maven 'maven3'
+
+         }
+    stages {
+        stage('clone') {
+            steps {
+               checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/venkykukatla/webapp.git']]]) 
+            }
+        }
+        stage('Build') {
+            steps {
+               sh 'mvn clean install -f /var/lib/jenkins/workspace/Tomcat/pom.xml' 
+            }
+        } 
+        stage('Deploy to tomcat') {
+            steps {
+            sshagent(['deploycode']) {
+             sh "scp -o StrictHostKeyChecking=no target/hello-1.0.war root@18.220.104.186:/opt/tomcat/apache-tomcat-8.5.82/webapps"                
+            }
+
+        }      
+    }
+}
